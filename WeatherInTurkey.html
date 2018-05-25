@@ -19,12 +19,15 @@
         margin-right: 10%;
     }
     .input input {
+        margin-top: 10px;
+        margin-bottom: 10px;
         margin-right: 5%;
         width: 70%;
     }
     .input button {
         text-align: center;
-        width: 20%;
+        width: 25%;
+        margin-left: 75%;
     }
     #title {
         border-bottom-style: inset;
@@ -48,6 +51,16 @@
         margin-right: auto;
         width: 50%;
     }
+    .dropdownCo select {
+        margin: 10px;
+        margin-left: 0px;
+        width: 100%;
+    }
+    .dropdownCi select {
+        margin: 10px;
+        margin-left: 0px;
+        width: 100%;
+    }
     #error{
         text-align: center;
         font-size: 1.5em;
@@ -59,59 +72,109 @@
 </head>
 
 <body>
-    <h1 class="main_title">Weather in Turkey</h1>
+    <h2 class="main_title">Weather (Almost) All Over the World</h2>
     <div class="input">
-        <input type="text" value="city...">
-        <button>Find</button>
+        <div class="dropdownCo">
+        </div>
+        <div class="dropdownCi">
+        </div>
+        <div class="search">
+            <!--<input type="text" class="search" value="city...">-->
+            <button>Find</button>
+        </div>
     </div>
     <div class="mypanel">
     </div>
 
     <script>
     var city = 'Antalya';
+    var CoCode = 'tr';
+    $.getJSON('https://cors.io/?https://battuta.medunes.net/api/country/all/?key=f9a1e3534f9c0b61ee24e3eb045a41b8', function(Cdata) {
+        var CNTRDrop="<select name=\"countriesNcodes\">";
+        for(var i = 0; i<Cdata.length; i++){
+            //console.log(Cdata[i].name+" "+Cdata[i].code);
+            CNTRDrop+="<option value=\""+Cdata[i].code+"\">"+Cdata[i].name+"</option>";
+        }
+        CNTRDrop+="</select>"
+        $(".dropdownCo").html(CNTRDrop);
+        var CoCode = $(".dropdownCo select").val();
+        $.getJSON("https://cors.io/?https://battuta.medunes.net/api/region/"+CoCode+"/all/?key=f9a1e3534f9c0b61ee24e3eb045a41b8", function(Rdata) {
+                var cityDrop="<select name=\"cities\">";
+                for(var i = 0; i<Rdata.length; i++){
+                    cityDrop+="<option value=\""+Rdata[i].region+"\">"+Rdata[i].region+"</option>";
+                }
+                cityDrop+="</select>"
+                $(".dropdownCi").html(cityDrop);
+        });
+        //console.log(CoCode);
+        if(CoCode==null)CoCode='tr';
+
+        $(".dropdownCo select").on("change",function(){
+            var CoCode = $(".dropdownCo select").val();
+            //console.log("Changed country "+CoCode);
+            $.getJSON("https://cors.io/?https://battuta.medunes.net/api/region/"+CoCode+"/all/?key=f9a1e3534f9c0b61ee24e3eb045a41b8", function(Rdata) {
+                var cityDrop="<select name=\"cities\">";
+                for(var i = 0; i<Rdata.length; i++){
+                    cityDrop+="<option value=\""+Rdata[i].region+"\">"+Rdata[i].region+"</option>";
+                }
+                cityDrop+="</select>"
+                $(".dropdownCi").html(cityDrop);
+                //getData();
+            });
+        });
+        
+
+
+
+        $( "button" ).click(function() {
+            getData();
+        });
+        function getData(){
+            city = $(".dropdownCi select").val();
+            CoCode = $(".dropdownCo select").val();
+            var link = 'http://api.openweathermap.org/data/2.5/weather?q='+city+','+CoCode+'&appid=b0055ff488b81b7cb9ce9930a6d266b7';
+            $.getJSON(link, function (data) {
+                var sunrise = new Date(data.sys.sunrise*1000);
+                var sunriseTime = sunrise.getHours() + ':' + ("0" + sunrise.getMinutes()).substr(-2) + ':' + ("0" + sunrise.getSeconds()).substr(-2)
+                var sunset = new Date(data.sys.sunset*1000);
+                var sunsetTime = sunset.getHours() + ':' + ("0" + sunset.getMinutes()).substr(-2) + ':' + ("0" + sunset.getSeconds()).substr(-2)
+                var imageLink = "http://openweathermap.org/img/w/"+data.weather[0].icon+".png"
+                var text = `<div>
+                                <div id="title">
+                                    <h3>The weather in ${data.name}</h3>
+                                </div>
+                                <div id="content">
+                                    <div id="weather">
+                                        <h4>weather <span>${data.weather[0].main}</span></h4>
+                                        <img src=${imageLink} alt=${data.weather[0].icon}>
+                                    </div>
+                                    <div id="temperature">
+                                        <h4>Temperature <span>${Math.round(data.main.temp-273.15)} &#8451</span> </h4>
+                                    </div>
+                                    <div id="humidity">
+                                        <h4>Humidity <span>${data.main.humidity}%</span></h4>
+                                    </div>
+                                    <div id="clouds">
+                                        <h4>Clouds <span>${data.clouds.all}%</span></h4>
+                                    </div>
+                                    <div id="sunrise">
+                                        <h4>Sunrise <span>${sunriseTime}</span></h4>
+                                    </div>
+                                    <div id="sunset">
+                                        <h4>Sunset <span>${sunsetTime}</span></h4>
+                                    </div>
+                                </div>
+                            </div>`
+                $(".mypanel").html(text);
+            });
+        }
+    });
     $("input").keyup(function(event) {
         if (event.keyCode === 13) {
             $("button").click();
         }
     });
-    $( "button" ).click(function() {
-      city = $( "input" ).val();
-      var link = 'http://api.openweathermap.org/data/2.5/weather?q='+city+',tr&appid=b0055ff488b81b7cb9ce9930a6d266b7';
-        $.getJSON(link, function(data) {
-            var sunrise = new Date(data.sys.sunrise*1000);
-            var sunriseTime = sunrise.getHours() + ':' + ("0" + sunrise.getMinutes()).substr(-2) + ':' + ("0" + sunrise.getSeconds()).substr(-2)
-            var sunset = new Date(data.sys.sunset*1000);
-            var sunsetTime = sunset.getHours() + ':' + ("0" + sunset.getMinutes()).substr(-2) + ':' + ("0" + sunset.getSeconds()).substr(-2)
-            var imageLink = "http://openweathermap.org/img/w/"+data.weather[0].icon+".png"
-            var text = `<div>
-                            <div id="title">
-                                <h3>The weather in ${data.name}</h3>
-                            </div>
-                            <div id="content">
-                                <div id="weather">
-                                    <h4>weather <span>${data.weather[0].main}</span></h4>
-                                    <img src=${imageLink} alt=${data.weather[0].icon}>
-                                </div>
-                                <div id="temperature">
-                                    <h4>Temperature <span>${Math.round(data.main.temp-273.15)} &#8451</span> </h4>
-                                </div>
-                                <div id="humidity">
-                                    <h4>Humidity <span>${data.main.humidity}%</span></h4>
-                                </div>
-                                <div id="clouds">
-                                    <h4>Clouds <span>${data.clouds.all}%</span></h4>
-                                </div>
-                                <div id="sunrise">
-                                    <h4>Sunrise <span>${sunriseTime}</span></h4>
-                                </div>
-                                <div id="sunset">
-                                    <h4>Sunset <span>${sunsetTime}</span></h4>
-                                </div>
-                            </div>
-                        </div>`
-            $(".mypanel").html(text);
-        });
-    });
+
     $.ajaxSetup({
       "error":function() { 
             var error = "<div id=\"error\">No data was found about "+city+"</div>"; 
