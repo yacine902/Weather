@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Weather</title>
+<!--<link rel="stylesheet" type="text/css" href="style.css">-->
+<style type="text/css">
+    body {
+        border-style: ridge;
+        margin: 20%;
+        padding: 5%;
+    }
+    .main_title {
+        text-align: center;
+        text-transform: uppercase;
+        color: cadetblue;
+    }
+    .input {
+        margin-left: 10%;
+        margin-right: 10%;
+    }
+    .input input {
+        margin-right: 5%;
+        width: 70%;
+    }
+    .input button {
+        text-align: center;
+        width: 20%;
+    }
+    #title {
+        border-bottom-style: inset;
+        text-align: center;
+        padding-left: 0px;
+    }
+    #content div {
+        padding-left: 5%;
+        border-bottom-style: inset;
+        text-align: center;
+
+    }
+    #content h4 span {
+        padding-left: 40%;
+        font-size: 0.9em;
+        font-weight: normal;
+    }
+    image {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+    }
+    #error{
+        text-align: center;
+        font-size: 1.5em;
+        font-weight: bold;
+        padding-top: 10%;
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+</head>
+
+<body>
+    <h1 class="main_title">Weather in Turkey</h1>
+    <div class="input">
+        <input type="text" value="city...">
+        <button>Find</button>
+    </div>
+    <div class="mypanel">
+    </div>
+
+    <script>
+    var city = 'Antalya';
+    $("input").keyup(function(event) {
+        if (event.keyCode === 13) {
+            $("button").click();
+        }
+    });
+    $( "button" ).click(function() {
+      city = $( "input" ).val();
+      var link = 'http://api.openweathermap.org/data/2.5/weather?q='+city+',tr&appid=b0055ff488b81b7cb9ce9930a6d266b7';
+        $.getJSON(link, function(data) {
+            var sunrise = new Date(data.sys.sunrise*1000);
+            var sunriseTime = sunrise.getHours() + ':' + ("0" + sunrise.getMinutes()).substr(-2) + ':' + ("0" + sunrise.getSeconds()).substr(-2)
+            var sunset = new Date(data.sys.sunset*1000);
+            var sunsetTime = sunset.getHours() + ':' + ("0" + sunset.getMinutes()).substr(-2) + ':' + ("0" + sunset.getSeconds()).substr(-2)
+            var imageLink = "http://openweathermap.org/img/w/"+data.weather[0].icon+".png"
+            var text = `<div>
+                            <div id="title">
+                                <h3>The weather in ${data.name}</h3>
+                            </div>
+                            <div id="content">
+                                <div id="weather">
+                                    <h4>weather <span>${data.weather[0].main}</span></h4>
+                                    <img src=${imageLink} alt=${data.weather[0].icon}>
+                                </div>
+                                <div id="temperature">
+                                    <h4>Temperature <span>${Math.round(data.main.temp-273.15)} &#8451</span> </h4>
+                                </div>
+                                <div id="humidity">
+                                    <h4>Humidity <span>${data.main.humidity}%</span></h4>
+                                </div>
+                                <div id="clouds">
+                                    <h4>Clouds <span>${data.clouds.all}%</span></h4>
+                                </div>
+                                <div id="sunrise">
+                                    <h4>Sunrise <span>${sunriseTime}</span></h4>
+                                </div>
+                                <div id="sunset">
+                                    <h4>Sunset <span>${sunsetTime}</span></h4>
+                                </div>
+                            </div>
+                        </div>`
+            $(".mypanel").html(text);
+        });
+    });
+    $.ajaxSetup({
+      "error":function() { 
+            var error = "<div id=\"error\">No data was found about "+city+"</div>"; 
+            $(".mypanel").html(error);
+      }
+    });
+    </script>
+    
+</body>
+</html>
